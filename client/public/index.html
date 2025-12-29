@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>P2P Chiffré - Messagerie</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <header class="header">
+            <div class="logo">🔐 P2P</div>
+            <div class="header-controls">
+                <button id="settings-btn" class="header-btn" title="Paramètres">⚙️</button>
+                <button id="panic-btn" class="panic-btn" title="Mode Panic">🚨</button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <main class="main">
+            <!-- SETUP PANEL (overlay on mobile) -->
+            <section class="setup-panel" id="setup-panel">
+                <div class="panel-content">
+                    <h2>Nouvelle Connexion</h2>
+                    
+                    <div class="form-group">
+                        <label for="server-url">Serveur</label>
+                        <input type="text" id="server-url" placeholder="ws://localhost:3000" value="ws://localhost:3000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="room-id">Room ID</label>
+                        <div class="input-group">
+                            <input type="text" id="room-id" placeholder="Généré auto...">
+                            <button id="generate-room-btn" class="btn-secondary">🎲</button>
+                        </div>
+                    </div>
+
+                    <button id="connect-btn" class="btn-primary">Rejoindre</button>
+
+                    <!-- CONNECTION INFO -->
+                    <div id="connection-info" class="info-section" style="display: none;">
+                        <h3>Connecté</h3>
+                        <div class="info-item">
+                            <span class="label">ID:</span>
+                            <code id="my-peer-id">-</code>
+                            <button class="copy-btn" onclick="copyToClipboard('#my-peer-id', event)">📋</button>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Room:</span>
+                            <code id="current-room">-</code>
+                        </div>
+                        <div class="encryption-badge">🔐 ECDH + AES-256-GCM</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHAT PANEL -->
+            <section class="chat-panel" id="chat-panel">
+                <div class="chat-header">
+                    <div class="status-indicator">
+                        <span id="status" class="status disconnected">Déconnecté</span>
+                        <span id="encryption-status" class="encryption-status">🔓 Non chiffré</span>
+                    </div>
+                </div>
+
+                <div class="messages-section">
+                    <div id="messages" class="messages-list"></div>
+                </div>
+
+                <div class="input-section" id="input-section" style="display: none;">
+                    <div class="input-group">
+                        <input type="text" id="message-input" placeholder="Message..." maxlength="1000">
+                        <button id="send-btn" class="btn-icon">📤</button>
+                    </div>
+                    <div class="security-indicator">
+                        <span id="security-message">En attente de P2P...</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="crypto.js"></script>
+    <script src="vault.js"></script>
+    <script src="signaling.js"></script>
+    <script src="webrtc.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
