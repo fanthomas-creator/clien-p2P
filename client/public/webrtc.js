@@ -64,6 +64,8 @@ class WebRTCManager {
     };
 
     
+    
+    
     this.dataChannel.onmessage = async (event) => {
       try {
         const encryptedMessage = JSON.parse(event.data);
@@ -74,7 +76,7 @@ class WebRTCManager {
           encryptedMessage.payload
         );
         
-       
+        
         const messageObj = JSON.parse(decrypted);
         
         
