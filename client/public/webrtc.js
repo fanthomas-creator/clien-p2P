@@ -63,15 +63,27 @@ class WebRTCManager {
       this.emit('data-channel-error', error);
     };
 
+    // ===== MODIFICATION IMPORTANTE =====
+    // Le gestionnaire onmessage traite maintenant TEXTE et IMAGES
+    // Les messages arrivent comme : {type: 'text', text: '...'} ou {type: 'image', image: 'data:image/...'}
     this.dataChannel.onmessage = async (event) => {
       try {
         const encryptedMessage = JSON.parse(event.data);
+        
+        // Déchiffre le message
         const decrypted = await crypto.decrypt(
           this.sharedKey,
           encryptedMessage.payload
         );
+        
+        // Parse l'objet JSON déchiffré pour voir le type
+        const messageObj = JSON.parse(decrypted);
+        
+        // Émet un événement 'message' avec tous les détails
         this.emit('message', {
-          text: decrypted,
+          type: messageObj.type,        // 'text' ou 'image'
+          text: messageObj.text || null,     // Le texte du message (si type='text')
+          image: messageObj.image || null,   // Les données base64 de l'image (si type='image')
           timestamp: encryptedMessage.timestamp,
           encrypted: true
         });
@@ -130,12 +142,52 @@ class WebRTCManager {
     }
   }
 
+  // ===== FONCTION MODIFIÉE : envoyer du TEXTE =====
+  // Au lieu d'envoyer juste le texte brut, on envoie un objet {type: 'text', text: '...'}
   async sendMessage(text) {
     if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
       throw new Error('DataChannel not open');
     }
 
-    const encrypted = await crypto.encrypt(this.sharedKey, text);
+    // Crée un objet qui décrit le message
+    const messageObj = {
+      type: 'text',
+      text: text
+    };
+
+    // Chiffre cet objet sous forme JSON
+    const encrypted = await crypto.encrypt(
+      this.sharedKey,
+      JSON.stringify(messageObj)  // Important : convertir en JSON string avant chiffrement
+    );
+
+    const message = {
+      payload: encrypted,
+      timestamp: Date.now()
+    };
+
+    this.dataChannel.send(JSON.stringify(message));
+  }
+
+  // ===== NOUVELLE FONCTION : envoyer une IMAGE =====
+  // Fonctionne exactement comme sendMessage mais avec type='image' et les données base64
+  async sendImage(imageBase64) {
+    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+      throw new Error('DataChannel not open');
+    }
+
+    // Crée un objet qui décrit l'image
+    const messageObj = {
+      type: 'image',
+      image: imageBase64  // Les données base64 de l'image (ex: "data:image/png;base64,iVBORw0KGgo...")
+    };
+
+    // Chiffre cet objet sous forme JSON
+    const encrypted = await crypto.encrypt(
+      this.sharedKey,
+      JSON.stringify(messageObj)  // Important : convertir en JSON string avant chiffrement
+    );
+
     const message = {
       payload: encrypted,
       timestamp: Date.now()
