@@ -1,6 +1,3 @@
-/**
- * STYLES.CSS - Mobile First + Responsive
- */
 
 :root {
   --color-primary: #1a1a2e;
@@ -43,7 +40,7 @@ body {
   padding-bottom: var(--safe-bottom);
 }
 
-/* ========== HEADER ========== */
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -107,7 +104,7 @@ body {
   box-shadow: 0 0 12px rgba(255, 107, 107, 0.5);
 }
 
-/* ========== MAIN LAYOUT ========== */
+
 .main {
   display: flex;
   flex: 1;
@@ -115,7 +112,7 @@ body {
   position: relative;
 }
 
-/* ========== SETUP PANEL ========== */
+
 .setup-panel {
   position: absolute;
   top: 0;
@@ -170,7 +167,7 @@ body {
   box-shadow: 0 0 8px rgba(15, 52, 96, 0.5);
 }
 
-/* ========== BUTTONS ========== */
+
 .btn-primary {
   padding: 0.75rem 1.5rem;
   background-color: var(--color-accent);
@@ -228,7 +225,7 @@ body {
   color: var(--color-primary);
 }
 
-/* ========== MESSAGES SECTION ========== */
+
 .messages-section {
   flex: 1;
   overflow-y: auto;
@@ -297,7 +294,7 @@ body {
   opacity: 0.7;
 }
 
-/* ========== INPUT SECTION ========== */
+
 .input-section {
   padding: 1.5rem;
   border-top: 2px solid var(--color-border);
@@ -331,7 +328,7 @@ body {
   text-align: center;
 }
 
-/* ========== SCROLLBAR ========== */
+
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -349,7 +346,7 @@ body {
   background: var(--color-safe);
 }
 
-/* ========== CHAT PANEL ========== */
+
 .chat-panel {
   position: absolute;
   top: 0;
@@ -442,7 +439,7 @@ body {
   flex: 1;
 }
 
-/* ========== INFO ITEM STYLING ========== */
+
 .info-item {
   margin-bottom: 0.8rem;
   padding: 0.5rem;
@@ -466,7 +463,7 @@ body {
   word-break: break-all;
 }
 
-/* ========== RESPONSIVE ========== */
+
 @media (max-width: 767px) {
   .setup-panel {
     transform: translateX(0);
@@ -547,4 +544,26 @@ body {
   #settings-btn {
     display: none;
   }
+}
+
+.message-content img {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 4px;
+  object-fit: cover;
+  transition: transform 0.2s;
+}
+
+.message-content img:hover {
+  transform: scale(1.05);
+  cursor: pointer;
+}
+
+#image-btn {
+  transition: all 0.2s;
+}
+
+#image-btn:active {
+  background-color: #1a4a7a;
+  transform: scale(0.95);
 }
