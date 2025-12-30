@@ -10,7 +10,6 @@
 </head>
 <body>
     <div class="container">
-        
         <header class="header">
             <div class="logo">🔐 P2P</div>
             <div class="header-controls">
@@ -19,9 +18,7 @@
             </div>
         </header>
 
-       
         <main class="main">
-            
             <section class="setup-panel" id="setup-panel">
                 <div class="panel-content">
                     <h2>Nouvelle Connexion</h2>
@@ -41,7 +38,6 @@
 
                     <button id="connect-btn" class="btn-primary">Rejoindre</button>
 
-                    
                     <div id="connection-info" class="info-section" style="display: none;">
                         <h3>Connecté</h3>
                         <div class="info-item">
@@ -58,7 +54,6 @@
                 </div>
             </section>
 
-            
             <section class="chat-panel" id="chat-panel">
                 <div class="chat-header">
                     <div class="status-indicator">
@@ -74,6 +69,8 @@
                 <div class="input-section" id="input-section" style="display: none;">
                     <div class="input-group">
                         <input type="text" id="message-input" placeholder="Message..." maxlength="1000">
+                        <input type="file" id="image-input" accept="image/*" style="display: none;">
+                        <button id="image-btn" class="btn-icon" title="Envoyer une image">🖼️</button>
                         <button id="send-btn" class="btn-icon">📤</button>
                     </div>
                     <div class="security-indicator">
@@ -84,7 +81,6 @@
         </main>
     </div>
 
-    
     <script src="crypto.js"></script>
     <script src="vault.js"></script>
     <script src="signaling.js"></script>
@@ -92,5 +88,3 @@
     <script src="app.js"></script>
 </body>
 </html>
-
-
