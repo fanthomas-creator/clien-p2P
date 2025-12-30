@@ -107,3 +107,4 @@ class CryptoManager {
 }
 
 const crypto = new CryptoManager();
+
