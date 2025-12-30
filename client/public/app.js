@@ -58,6 +58,21 @@ class P2PApp {
       }
     });
 
+    // ===== NOUVEAU : Gestion du bouton image =====
+    // Quand on clique sur le bouton image, on déclenche un clic sur l'input file caché
+    document.getElementById('image-btn').addEventListener('click', () => {
+      document.getElementById('image-input').click();
+    });
+
+    // Quand un fichier est sélectionné, on l'envoie
+    document.getElementById('image-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        this.sendImage(file);
+        e.target.value = '';  // Réinitialise l'input pour pouvoir renvoyer le même fichier
+      }
+    });
+
     document.getElementById('panic-btn').addEventListener('click', () => this.panic());
 
     signaling.on('joined', (data) => this.onSignalingJoined(data));
@@ -225,8 +240,18 @@ class P2PApp {
       this.updateUI();
     });
 
+    // ===== MODIFICATION IMPORTANTE =====
+    // Le handler 'message' reçoit maintenant un objet avec type, text, image
+    // On doit tester le type pour savoir comment afficher
     this.webrtc.on('message', (msg) => {
-      this.addRemoteMessage(msg.text);
+      // Si c'est une image, on appelle addRemoteImage
+      if (msg.type === 'image') {
+        this.addRemoteImage(msg.image);
+      } 
+      // Sinon c'est du texte, on appelle addRemoteMessage
+      else {
+        this.addRemoteMessage(msg.text);
+      }
     });
 
     this.webrtc.on('connection-state', (state) => {
@@ -261,6 +286,58 @@ class P2PApp {
       console.error('[APP] Error sending message:', error);
       this.addSystemMessage(`❌ Erreur envoi: ${error.message}`);
     }
+  }
+
+  // ===== NOUVELLE FONCTION : envoyer une image =====
+  // Cette fonction lit le fichier image et l'envoie via webrtc.sendImage()
+  async sendImage(imageFile) {
+    // imageFile est un objet File du input
+    
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = async (e) => {
+        try {
+          // e.target.result contient les données en base64 : "data:image/png;base64,iVBORw0KGgo..."
+          const imageBase64 = e.target.result;
+          
+          // Vérifie que l'image n'est pas trop grosse (limite à 5MB)
+          // La chaîne base64 est environ 33% plus grande que le fichier binaire
+          if (imageBase64.length > 5 * 1024 * 1024) {
+            this.addSystemMessage('❌ Image trop grande (max 5MB)');
+            reject(new Error('Image too large'));
+            return;
+          }
+
+          // Vérifie qu'on est bien connecté P2P
+          if (!this.webrtc || !this.webrtc.isConnected()) {
+            this.addSystemMessage('❌ Connexion P2P non établie');
+            reject(new Error('Not connected'));
+            return;
+          }
+
+          // Envoie l'image via WebRTC (elle sera chiffrée automatiquement)
+          await this.webrtc.sendImage(imageBase64);
+          
+          // Affiche l'image qu'on vient d'envoyer chez nous aussi
+          this.addLocalImage(imageBase64);
+          
+          resolve();
+          
+        } catch (error) {
+          console.error('[APP] Error sending image:', error);
+          this.addSystemMessage(`❌ Erreur envoi image: ${error.message}`);
+          reject(error);
+        }
+      };
+      
+      reader.onerror = () => {
+        reject(new Error('Failed to read file'));
+      };
+      
+      // Commence la lecture du fichier en base64
+      reader.readAsDataURL(imageFile);
+    });
   }
 
   async panic() {
@@ -312,7 +389,7 @@ class P2PApp {
     
     const timeSpan = document.createElement('span');
     timeSpan.className = 'message-time';
-    timeSpan.textContent = '🔒 ' + new Date().toLocaleTimeString();
+    timeSpan.textContent = '📍 ' + new Date().toLocaleTimeString();
     
     contentDiv.appendChild(p);
     contentDiv.appendChild(timeSpan);
@@ -334,9 +411,77 @@ class P2PApp {
     
     const timeSpan = document.createElement('span');
     timeSpan.className = 'message-time';
-    timeSpan.textContent = '🔒 ' + new Date().toLocaleTimeString();
+    timeSpan.textContent = '📍 ' + new Date().toLocaleTimeString();
     
     contentDiv.appendChild(p);
+    contentDiv.appendChild(timeSpan);
+    msgEl.appendChild(contentDiv);
+    messagesDiv.appendChild(msgEl);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  // ===== NOUVELLE FONCTION : afficher une image qu'on a envoyée =====
+  addLocalImage(imageBase64) {
+    const messagesDiv = document.getElementById('messages');
+    const msgEl = document.createElement('div');
+    msgEl.className = 'message local';
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    
+    // Crée une balise img avec les données base64
+    const img = document.createElement('img');
+    img.src = imageBase64;
+    img.style.maxWidth = '200px';
+    img.style.maxHeight = '200px';
+    img.style.borderRadius = '4px';
+    img.style.cursor = 'pointer';
+    
+    // Quand on clique sur l'image, on l'ouvre en plein écran dans un nouvel onglet
+    img.addEventListener('click', () => {
+      const fullWindow = window.open('', '_blank');
+      fullWindow.document.write(`<img src="${imageBase64}" style="max-width: 100%; max-height: 100%;">`);
+    });
+    
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'message-time';
+    timeSpan.textContent = '📍 ' + new Date().toLocaleTimeString();
+    
+    contentDiv.appendChild(img);
+    contentDiv.appendChild(timeSpan);
+    msgEl.appendChild(contentDiv);
+    messagesDiv.appendChild(msgEl);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  // ===== NOUVELLE FONCTION : afficher une image qu'on a reçue =====
+  addRemoteImage(imageBase64) {
+    const messagesDiv = document.getElementById('messages');
+    const msgEl = document.createElement('div');
+    msgEl.className = 'message remote';
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    
+    // Crée une balise img avec les données base64
+    const img = document.createElement('img');
+    img.src = imageBase64;
+    img.style.maxWidth = '200px';
+    img.style.maxHeight = '200px';
+    img.style.borderRadius = '4px';
+    img.style.cursor = 'pointer';
+    
+    // Quand on clique sur l'image, on l'ouvre en plein écran dans un nouvel onglet
+    img.addEventListener('click', () => {
+      const fullWindow = window.open('', '_blank');
+      fullWindow.document.write(`<img src="${imageBase64}" style="max-width: 100%; max-height: 100%;">`);
+    });
+    
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'message-time';
+    timeSpan.textContent = '📍 ' + new Date().toLocaleTimeString();
+    
+    contentDiv.appendChild(img);
     contentDiv.appendChild(timeSpan);
     msgEl.appendChild(contentDiv);
     messagesDiv.appendChild(msgEl);
@@ -356,15 +501,13 @@ class P2PApp {
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-
-
   updateUI() {
     const statusEl = document.getElementById('status');
     if (this.state.p2pConnected) {
       statusEl.textContent = '🟢 P2P Connecté';
       statusEl.className = 'status connected';
-      document.getElementById('security-message').textContent = '🔐 Chiffrement E2E actif';
-      document.getElementById('encryption-status').textContent = '🔒 Chiffré';
+      document.getElementById('security-message').textContent = '🔒 Chiffrement E2E actif';
+      document.getElementById('encryption-status').textContent = '🔐 Chiffré';
     } else if (this.state.connected) {
       statusEl.textContent = '🟡 Signalisation connectée';
       statusEl.className = 'status connected';
@@ -393,3 +536,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const app = new P2PApp();
   await app.init();
 });
+document.addEventListener('DOMContentLoaded', async () => {
+  const app = new P2PApp();
+  await app.init();
+});
+
